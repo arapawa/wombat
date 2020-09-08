@@ -116,23 +116,6 @@ function App() {
     return sanitized;
   }
 
-  // Show/Hide Heartbeat Survey textbox, and clear URL state if not checked
-  function handleHeartbeatSurvey(e) {
-    const heartbeat = document.querySelector('#heartbeatSurvey');
-    if (document.querySelector('#toggleHeartbeatSurvey').checked) {
-      heartbeat.style.display = 'block';
-      setHelpMessage('${surveyUrl}'); // setting helpMessage so we can easily display the variable name that gets replaced to the user
-    } else {
-      heartbeat.style.display = 'none';
-      setSurveyId('');
-      setHelpMessage('');
-    }
-  }
-
-  function handleSurveyId(e) {
-    setSurveyId(e.target.value);
-  }
-
   function uploadChallenge(client) {
     const employerName = client.fields['Limeade e='];
 
