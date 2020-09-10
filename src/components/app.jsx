@@ -8,7 +8,7 @@ import Papa from 'papaparse'; // using Papaparse library for FileReader and pars
 import Header from './header';
 import Footer from './footer';
 
-function clientsReducer(state, action) {
+function reducer(state, action) {
   return [...state, ...action];
 }
 
@@ -28,8 +28,13 @@ function App() {
   console.log(challengesFromCsv);
 
   const [clients, dispatch] = React.useReducer(
-    clientsReducer,
+    reducer,
     [] // initial clients
+  );
+
+  const [challenges, dispatchChallenges] = React.useReducer(
+    reducer,
+    [] // initial challenges
   );
 
   // When app first mounts, fetch clients
@@ -48,19 +53,14 @@ function App() {
 
   }, []); // Pass empty array to only run once on mount
 
-  function renderClients() {
-    const accountNamesList = clientsFromCsv.map(client => client['EmployerName']);
+  function renderChallenges() {
 
-    // Filter clients by the list of account names in the user uploaded CSV
-    const filteredClients = clients.filter(client => {
-      return accountNamesList.includes(client.fields['Limeade e=']);
-    });
+    let sortedChallenges = Array.from(challenges);
 
-    const sortedClients = [...filteredClients];
-
-    sortedClients.sort((a, b) => {
-      const nameA = a.fields['Limeade e='].toLowerCase();
-      const nameB = b.fields['Limeade e='].toLowerCase();
+    // Sorts the list of challenges
+    sortedChallenges.sort((a, b) => {
+      const nameA = a.client.fields['Account Name'].toLowerCase();
+      const nameB = b.client.fields['Account Name'].toLowerCase();
       if (nameA < nameB) {
         return -1;
       }
@@ -70,18 +70,17 @@ function App() {
       return 0;
     });
 
-    return sortedClients.map((client) => {
-      const employerName = client.fields['Limeade e='];
+    return sortedChallenges.map((challenge) => {
+      const employerName = challenge.client.fields['Limeade e='];
+      const domain = challenge.client.fields['Domain'];
 
       return (
         <tr id={employerName.replace(/\s*/g, '')} key={employerName}>
+          <td>{challenge.client.fields['Account Name']}</td>
+          <td><a href={`${domain}/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer`} target="_blank">{challenge.Name}</a></td>
+          <td>{status}</td>
           <td>
-            <a href={client.fields['Domain'] + '/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer'} target="_blank">{client.fields['Limeade e=']}</a>
-          </td>
-          <td className="challenge-id"></td>
-          <td className="status"></td>
-          <td>
-            <button type="button" className="btn btn-primary" onClick={() => uploadChallenge(client)}>Upload</button>
+            <button type="button" className="btn btn-primary" onClick={() => uploadChallenge(challenge)}>Upload</button>
           </td>
         </tr>
       );
@@ -116,40 +115,160 @@ function App() {
     return sanitized;
   }
 
-  function uploadChallenge(client) {
-    const employerName = client.fields['Limeade e='];
+  function createCSV(challenge) {
+    
 
-    const data = {
-      // TODO: Add data for challenge upload
-    };
+    let data = [[
+      'EmployerName',
+      'ChallengeId',
+      'ChallengeType',
+      'IsWeekly',
+      'WinStrategy',
+      'Target',
+      'Activity',
+      'ChallengeName',
+      'DisplayPriority',
+      'StartDate',
+      'EndDate',
+      'ShortDescription',
+      'MoreInformation',
+      'ImageUrl',
+      'ShowInProgram',
+      'RewardType',
+      'Reward',
+      'Dimensions',
+      'LeaderboardTag',
+      'EnableDeviceTracking',
+      'AllowSelfReporting',
+      'DeviceTrackingUnits',
+      'IsTeamChallenge',
+      'MinTeamSize',
+      'MaxTeamSize',
+      'Subgroup',
+      'Field1',
+      'Field1Value',
+      'Field2',
+      'Field2Value',
+      'Field3',
+      'Field3Value',
+      'AppearanceInProgram',
+      'IntegrationPartnerId',
+      'ButtonText',
+      'TargetUrl',
+      'EventCode',
+      'ShowExtendedDescription',
+      'ActivityTemplateId',
+      'IsFeatured',
+      'FeaturedDescription',
+      'FeaturedImageUrl',
+      'DailySelfReportLimit',
+      'DefaultPrivacy'
+    ]];
+
+    data.push([
+      challenge[0].EmployerName,
+      challenge[0].ChallengeId,
+      challenge[0].ChallengeType,
+      challenge[0].IsWeekly,
+      challenge[0].WinStrategy,
+      challenge[0].Target,
+      challenge[0].Activity,
+      challenge[0].ChallengeName,
+      challenge[0].DisplayPriority,
+      challenge[0].StartDate,
+      challenge[0].EndDate,
+      challenge[0].ShortDescription,
+      challenge[0].MoreInformation,
+      challenge[0].ImageUrl,
+      challenge[0].ShowInProgram,
+      challenge[0].RewardType,
+      challenge[0].Reward,
+      challenge[0].Dimensions,
+      challenge[0].LeaderboardTag,
+      challenge[0].EnableDeviceTracking,
+      challenge[0].AllowSelfReporting,
+      challenge[0].DeviceTrackingUnits,
+      challenge[0].IsTeamChallenge,
+      challenge[0].MinTeamSize,
+      challenge[0].MaxTeamSize,
+      challenge[0].Subgroup,
+      challenge[0].Field1,
+      challenge[0].Field1Value,
+      challenge[0].Field2,
+      challenge[0].Field2Value,
+      challenge[0].Field3,
+      challenge[0].Field3Value,
+      challenge[0].AppearanceInProgram,
+      challenge[0].IntegrationPartnerId,
+      challenge[0].ButtonText,
+      challenge[0].TargetUrl,
+      challenge[0].EventCode,
+      challenge[0].ShowExtendedDescription,
+      challenge[0].ActivityTemplateId,
+      challenge[0].IsFeatured,
+      challenge[0].FeaturedDescription,
+      challenge[0].FeaturedImageUrl,
+      challenge[0].DailySelfReportLimit,
+      challenge[0].DefaultPrivacy
+    ]);
+
     console.log('data for upload:', data);
 
-    $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Uploading...');
-    $.ajax({
-      url: 'https://api.limeade.com/api/admin/activity',
-      type: 'POST',
-      dataType: 'json',
-      data: JSON.stringify(data),
-      headers: {
-        Authorization: 'Bearer ' + client.fields['LimeadeAccessToken']
-      },
-      contentType: 'application/json; charset=utf-8'
-    }).done((result) => {
+    return data;
+  }
 
-      // Change row to green on success
-      $('#' + employerName.replace(/\s*/g, '')).removeClass('bg-danger');
-      $('#' + employerName.replace(/\s*/g, '')).addClass('bg-success text-white');
-      $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Success');
-      $('#' + employerName.replace(/\s*/g, '') + ' .challenge-id').html(`<a href="${client.fields['Domain']}/admin/program-designer/activities/activity/${result.Data.ChallengeId}" target="_blank">${result.Data.ChallengeId}</a>`);
+  function uploadChallenge(challenge) {
+      const employerName = challenge[0].client.fields['Limeade e='];
+      const psk = challenge[0].client.fields['Limeade PSK'];
+
+      const csv = createCSV(challenge);
+      const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
+
+      const params = {
+        e: employerName,
+        psk: psk,
+        data: csv.join('\n'),
+        type: 'IncentiveEvents'
+      };
+
+      $.post(url, params).done((response) => {
+        $('#' + employerName.replace(/\s*/g, '')).addClass('bg-success text-white');
+      }).fail((request, status, error) => {
+        $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
+        console.error(request.status);
+        console.error(request.responseText);
+        console.log('Upload failed for challenge ' + challenge[0].ChallengeName);
+      });
+
+    // commenting out in case we need it
+    // const employerName = client.fields['Limeade e='];
+
+    // $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Uploading...');
+    // $.ajax({
+    //   url: 'https://api.limeade.com/api/admin/activity',
+    //   type: 'POST',
+    //   dataType: 'json',
+    //   data: JSON.stringify(data),
+    //   headers: {
+    //     Authorization: 'Bearer ' + client.fields['LimeadeAccessToken']
+    //   },
+    //   contentType: 'application/json; charset=utf-8'
+    // }).done((result) => {
+
+    //   // Change row to green on success
+    //   $('#' + employerName.replace(/\s*/g, '')).removeClass('bg-danger');
+    //   $('#' + employerName.replace(/\s*/g, '')).addClass('bg-success text-white');
+    //   $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Success');
+    //   $('#' + employerName.replace(/\s*/g, '') + ' .challenge-id').html(`<a href="${client.fields['Domain']}/admin/program-designer/activities/activity/${result.Data.ChallengeId}" target="_blank">${result.Data.ChallengeId}</a>`);
 
 
-    }).fail((xhr, request, status, error) => {
-      $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
-      $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Failed: ' + request.responseText);
-      console.error('status: ', request.status);
-      console.error('request: ', request.responseText);
-      console.log('Create challenge failed for client ' + client.fields['Limeade e=']);
-    });
+    // }).fail((xhr, request, status, error) => {
+    //   $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
+    //   $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Failed: ' + request.responseText);
+    //   console.error('status: ', request.status);
+    //   console.error('request: ', request.responseText);
+    //   console.log('Create challenge failed for client ' + client.fields['Limeade e=']);
+    // });
 
   }
 
@@ -202,32 +321,15 @@ function App() {
           <thead>
             <tr>
               <th scope="col">Limeade e=</th>
-              <th scope="col">Challenge Id</th>
+              <th scope="col">Challenge Name</th>
               <th scope="col">Status</th>
               <th scope="col">Upload</th>
             </tr>
           </thead>
           <tbody>
-            {clientsFromCsv ? renderClients() : <tr />}
+            {challengesFromCsv ? renderChallenges() : <tr />}
           </tbody>
         </table>
-      </div>
-
-
-
-
-      <div className="row">
-        <div className="col text-left">
-          {/* TODO: add challenge form inputs here */}
-        </div>
-      </div>
-
-      <div className="row">
-        {/* For single-client-select */}
-        {/* <div className="col text-left">
-          <button type="button" className="btn btn-primary" id="uploadButton" onClick={() => uploadChallenge(selectedClient)}>Single Upload</button>
-          <img id="spinner" src="images/spinner.svg" />
-        </div> */}
       </div>
 
       <Footer />
