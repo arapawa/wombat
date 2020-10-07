@@ -54,7 +54,10 @@ function App() {
   }, []); // Pass empty array to only run once on mount
 
   function renderChallenges() {
-
+    // TODO: debug why table isn't rendering
+    // begin by removing more unneeded code from eight wolves
+    // and changing things like challenge.client.fields into
+    // challengesFromCsv and clientsFromCsv
     let sortedChallenges = Array.from(challenges);
 
     // Sorts the list of challenges
@@ -166,50 +169,50 @@ function App() {
     ]];
 
     data.push([
-      challenge[0].EmployerName,
-      challenge[0].ChallengeId,
-      challenge[0].ChallengeType,
-      challenge[0].IsWeekly,
-      challenge[0].WinStrategy,
-      challenge[0].Target,
-      challenge[0].Activity,
-      challenge[0].ChallengeName,
-      challenge[0].DisplayPriority,
-      challenge[0].StartDate,
-      challenge[0].EndDate,
-      challenge[0].ShortDescription,
-      challenge[0].MoreInformation,
-      challenge[0].ImageUrl,
-      challenge[0].ShowInProgram,
-      challenge[0].RewardType,
-      challenge[0].Reward,
-      challenge[0].Dimensions,
-      challenge[0].LeaderboardTag,
-      challenge[0].EnableDeviceTracking,
-      challenge[0].AllowSelfReporting,
-      challenge[0].DeviceTrackingUnits,
-      challenge[0].IsTeamChallenge,
-      challenge[0].MinTeamSize,
-      challenge[0].MaxTeamSize,
-      challenge[0].Subgroup,
-      challenge[0].Field1,
-      challenge[0].Field1Value,
-      challenge[0].Field2,
-      challenge[0].Field2Value,
-      challenge[0].Field3,
-      challenge[0].Field3Value,
-      challenge[0].AppearanceInProgram,
-      challenge[0].IntegrationPartnerId,
-      challenge[0].ButtonText,
-      challenge[0].TargetUrl,
-      challenge[0].EventCode,
-      challenge[0].ShowExtendedDescription,
-      challenge[0].ActivityTemplateId,
-      challenge[0].IsFeatured,
-      challenge[0].FeaturedDescription,
-      challenge[0].FeaturedImageUrl,
-      challenge[0].DailySelfReportLimit,
-      challenge[0].DefaultPrivacy
+      challenge.EmployerName,
+      challenge.ChallengeId,
+      challenge.ChallengeType,
+      challenge.IsWeekly,
+      challenge.WinStrategy,
+      challenge.Target,
+      challenge.Activity,
+      challenge.ChallengeName,
+      challenge.DisplayPriority,
+      challenge.StartDate,
+      challenge.EndDate,
+      challenge.ShortDescription,
+      challenge.MoreInformation,
+      challenge.ImageUrl,
+      challenge.ShowInProgram,
+      challenge.RewardType,
+      challenge.Reward,
+      challenge.Dimensions,
+      challenge.LeaderboardTag,
+      challenge.EnableDeviceTracking,
+      challenge.AllowSelfReporting,
+      challenge.DeviceTrackingUnits,
+      challenge.IsTeamChallenge,
+      challenge.MinTeamSize,
+      challenge.MaxTeamSize,
+      challenge.Subgroup,
+      challenge.Field1,
+      challenge.Field1Value,
+      challenge.Field2,
+      challenge.Field2Value,
+      challenge.Field3,
+      challenge.Field3Value,
+      challenge.AppearanceInProgram,
+      challenge.IntegrationPartnerId,
+      challenge.ButtonText,
+      challenge.TargetUrl,
+      challenge.EventCode,
+      challenge.ShowExtendedDescription,
+      challenge.ActivityTemplateId,
+      challenge.IsFeatured,
+      challenge.FeaturedDescription,
+      challenge.FeaturedImageUrl,
+      challenge.DailySelfReportLimit,
+      challenge.DefaultPrivacy
     ]);
 
     console.log('data for upload:', data);
@@ -218,8 +221,8 @@ function App() {
   }
 
   function uploadChallenge(challenge) {
-      const employerName = challenge[0].client.fields['Limeade e='];
-      const psk = challenge[0].client.fields['Limeade PSK'];
+      const employerName = challenge.client.fields['Limeade e='];
+      const psk = challenge.client.fields['Limeade PSK'];
 
       const csv = createCSV(challenge);
       const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
@@ -237,7 +240,7 @@ function App() {
         $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
         console.error(request.status);
         console.error(request.responseText);
-        console.log('Upload failed for challenge ' + challenge[0].ChallengeName);
+        console.log('Upload failed for challenge ' + challenge.ChallengeName);
       });
 
     // commenting out in case we need it
