@@ -14,12 +14,6 @@ function reducer(state, action) {
 
 /* globals $ */
 function App() {
-  // for single-client-select
-  // const [selectedClient, setSelectedClient] = useState(null);
-
-  const [surveyId, setSurveyId] = useState('');
-  const [helpMessage, setHelpMessage] = useState('');
-
   // clients csv state
   const [clientsFromCsv, setClientsFromCsv] = useState(null);
 
@@ -32,6 +26,7 @@ function App() {
     [] // initial clients
   );
 
+  // note: why are we using challengesFromCsv and not challenges?
   const [challenges, dispatchChallenges] = React.useReducer(
     reducer,
     [] // initial challenges
@@ -54,34 +49,21 @@ function App() {
   }, []); // Pass empty array to only run once on mount
 
   function renderChallenges() {
-    // TODO: debug why table isn't rendering
-    // begin by removing more unneeded code from eight wolves
-    // and changing things like challenge.client.fields into
-    // challengesFromCsv and clientsFromCsv
-    let sortedChallenges = Array.from(challenges);
 
-    // Sorts the list of challenges
-    sortedChallenges.sort((a, b) => {
-      const nameA = a.client.fields['Account Name'].toLowerCase();
-      const nameB = b.client.fields['Account Name'].toLowerCase();
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) {
-        return 1;
-      }
-      return 0;
-    });
+    return challengesFromCsv.map((challenge) => {
+      const employerName = challenge.EmployerName;
+      // TODO: get domain from Clients (Most Up to Date)
+      // const domain = challenge.client.fields['Domain'];
+      const domain = 'https://limeadedemorb.mywellmetrics.com';
 
-    return sortedChallenges.map((challenge) => {
-      const employerName = challenge.client.fields['Limeade e='];
-      const domain = challenge.client.fields['Domain'];
-
+      const regexpress = /[\s.?!,;:]*/g;
       return (
-        <tr id={employerName.replace(/\s*/g, '')} key={employerName}>
-          <td>{challenge.client.fields['Account Name']}</td>
-          <td><a href={`${domain}/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer`} target="_blank">{challenge.Name}</a></td>
-          <td>{status}</td>
+        // TODO: change id and key into something more reliable for if there are more than one challenge with the same name
+        // maybe row number/id/arrayid?
+        <tr id={challenge.ChallengeName.replace(regexpress, '')} key={challenge.ChallengeName}>
+          <td className="employer-name">{employerName}</td>
+          <td className="domain"><a href={`${domain}/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer`} target="_blank">{challenge.ChallengeName}</a></td>
+          <td className="status">{status}</td>
           <td>
             <button type="button" className="btn btn-primary" onClick={() => uploadChallenge(challenge)}>Upload</button>
           </td>
@@ -118,6 +100,7 @@ function App() {
     return sanitized;
   }
 
+  // note: should we use papaparse for creating the upload csv?
   function createCSV(challenge) {
     
 
@@ -221,27 +204,44 @@ function App() {
   }
 
   function uploadChallenge(challenge) {
-      const employerName = challenge.client.fields['Limeade e='];
-      const psk = challenge.client.fields['Limeade PSK'];
+    const regexpress = /[\s.?!,;:]*/g;
 
-      const csv = createCSV(challenge);
-      const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
+    // let the user know that an upload is in progress
+    $('#' + challenge.ChallengeName.replace(/[\s.?!,;:]*/g, '') + ' .status').html('Uploading...');
 
-      const params = {
-        e: employerName,
-        psk: psk,
-        data: csv.join('\n'),
-        type: 'IncentiveEvents'
-      };
+    const employerName = challenge.EmployerName;
+    // TODO: get psk from Clients (Most up to Date)
+    // const psk = challenge.client.fields['Limeade PSK'];
+    const psk = 'dbd95a93-07e0-4618-8d6d-182dc7e567ad';
 
-      $.post(url, params).done((response) => {
-        $('#' + employerName.replace(/\s*/g, '')).addClass('bg-success text-white');
-      }).fail((request, status, error) => {
-        $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
-        console.error(request.status);
-        console.error(request.responseText);
+    const csv = createCSV(challenge);
+    const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
+
+    const params = {
+      e: employerName,
+      psk: psk,
+      data: csv.join('\n'),
+      type: 'Challenges'
+    };
+
+    $.post(url, params).done((response) => {
+      // if Limeade punks us with a silent fail
+      if (response.includes('error')) {
+        $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-danger text-white');
+        $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Error. See console log.');
+        console.log('response: ', response);
         console.log('Upload failed for challenge ' + challenge.ChallengeName);
-      });
+      } else {
+        $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-success text-white');
+        $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Success');
+      }
+    }).fail((request, status, error) => {
+      $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-danger text-white');
+      $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Error: ' + request.responseText);
+      console.error(request.status);
+      console.error(request.responseText);
+      console.log('Upload failed for challenge ' + challenge.ChallengeName);
+    });
 
     // commenting out in case we need it
     // const employerName = client.fields['Limeade e='];
