@@ -49,7 +49,7 @@ function App() {
 
   function renderChallenges() {
 
-    return challengesFromCsv.map((challenge) => {
+    return challengesFromCsv.map((challenge, index) => {
       const employerName = challenge.EmployerName;
       
       // get the domain for the challenge from airtable
@@ -62,15 +62,12 @@ function App() {
 
       const regexpress = /[\s.?!,;:]*/g;
       return (
-        // TODO: change id and key into something more reliable for if there are more than one challenge with the same name
-        // maybe row number/id/arrayid?
-        // will the table row id match up with the array id in challengesFromCsv?
-        <tr id={challenge.ChallengeName.replace(regexpress, '')} key={challenge.ChallengeName}>
+        <tr id={`challenge-${index}`} key={`challenge-${index}`}>
           <td className="employer-name">{employerName}</td>
           <td className="domain"><a href={`${domain}/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer`} target="_blank">{challenge.ChallengeName}</a></td>
           <td className="status">{status}</td>
           <td>
-            <button type="button" className="btn btn-primary" onClick={() => uploadChallenge(challenge)}>Upload</button>
+            <button type="button" className="btn btn-primary" onClick={() => uploadChallenge(challenge, $(event.target).closest('tr').attr('id'))}>Upload</button> {/* passing row id for status messages */}
           </td>
         </tr>
       );
@@ -103,8 +100,6 @@ function App() {
     return sanitized;
   }
 
-  // note: should we use papaparse for creating the upload csv?
-  // which cells are dirty and should be sanitized?
   function createCSV(challenge) {
     let data = [[
       'EmployerName',
@@ -205,11 +200,11 @@ function App() {
     return data;
   }
 
-  function uploadChallenge(challenge) {
+  function uploadChallenge(challenge, challengeIndex) {
     const employerName = challenge.EmployerName;
     const regexpress = /[\s.?!,;:]*/g;
     // let the user know that an upload is in progress
-    $('#' + challenge.ChallengeName.replace(/[\s.?!,;:]*/g, '') + ' .status').html('Uploading...');
+    $('#' + challengeIndex + ' .status').html('Uploading...');
 
     // get the domain for the challenge from airtable
     let psk = '';
@@ -232,17 +227,17 @@ function App() {
     $.post(url, params).done((response) => {
       // if Limeade punks us with a silent fail
       if (response.includes('error')) {
-        $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-danger text-white');
-        $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Error. See console log.');
+        $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
+        $('#' + challengeIndex + ' .status').html('Error. See console log.');
         console.log('response: ', response);
         console.log('Upload failed for challenge ' + challenge.ChallengeName);
       } else {
-        $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-success text-white');
-        $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Success');
+        $('#' + challengeIndex + ' .status').addClass('bg-success text-white');
+        $('#' + challengeIndex + ' .status').html('Success');
       }
     }).fail((request, status, error) => {
-      $('#' + challenge.ChallengeName.replace(regexpress, '')).addClass('bg-danger text-white');
-      $('#' + challenge.ChallengeName.replace(regexpress, '') + ' .status').html('Error: ' + request.responseText);
+      $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
+      $('#' + challengeIndex + ' .status').html('Error: ' + request.responseText);
       console.error(request.status);
       console.error(request.responseText);
       console.log('Upload failed for challenge ' + challenge.ChallengeName);
