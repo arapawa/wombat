@@ -21,7 +21,6 @@ function App() {
     reducer,
     [] // initial clients
   );
-  console.log(clients);
 
   // note: why are we using challengesFromCsv and not challenges?
   const [challenges, dispatchChallenges] = React.useReducer(
@@ -52,10 +51,8 @@ function App() {
 
     return challengesFromCsv.map((challenge) => {
       const employerName = challenge.EmployerName;
-
-      // TODO: get domain (and maybe PSK) from clients list from Airtable
-      // either filter list by EmployerName/Limeade e=
-      // or use promise structure to get the data from airtable then create table row
+      
+      // get the domain for the challenge from airtable
       let domain = '';
       for (let i = 0; i < clients.length; i++) {
         if (clients[i].fields['Limeade e='] === employerName) {
@@ -63,25 +60,11 @@ function App() {
         }
       }
 
-      // // get client and domain
-      // base('Clients').select({
-      //   filterByFormula: `{Limeade e=}='${challenge.EmployerName}'`
-      // }).eachPage((records, fetchNextPage) => {
-      //   const client = records[0];
-      //   domain = client.fields['Domain'];
-      //   psk = client.fields['Limeade PSK'];
-      // }, (err) => {
-      //   if (err) {
-      //     console.error(err);
-      //     return;
-      //   }
-      // });
-
-
       const regexpress = /[\s.?!,;:]*/g;
       return (
         // TODO: change id and key into something more reliable for if there are more than one challenge with the same name
         // maybe row number/id/arrayid?
+        // will the table row id match up with the array id in challengesFromCsv?
         <tr id={challenge.ChallengeName.replace(regexpress, '')} key={challenge.ChallengeName}>
           <td className="employer-name">{employerName}</td>
           <td className="domain"><a href={`${domain}/ControlPanel/RoleAdmin/ViewChallenges.aspx?type=employer`} target="_blank">{challenge.ChallengeName}</a></td>
@@ -92,7 +75,6 @@ function App() {
         </tr>
       );
     });
-
   }
 
   function handleChallengesCsvFiles(e) {
@@ -122,9 +104,8 @@ function App() {
   }
 
   // note: should we use papaparse for creating the upload csv?
+  // which cells are dirty and should be sanitized?
   function createCSV(challenge) {
-    
-
     let data = [[
       'EmployerName',
       'ChallengeId',
@@ -184,8 +165,8 @@ function App() {
       challenge.DisplayPriority,
       challenge.StartDate,
       challenge.EndDate,
-      challenge.ShortDescription,
-      challenge.MoreInformation,
+      sanitize(challenge.ShortDescription),
+      sanitize(challenge.MoreInformation),
       challenge.ImageUrl,
       challenge.ShowInProgram,
       challenge.RewardType,
@@ -225,36 +206,18 @@ function App() {
   }
 
   function uploadChallenge(challenge) {
+    const employerName = challenge.EmployerName;
     const regexpress = /[\s.?!,;:]*/g;
-
     // let the user know that an upload is in progress
     $('#' + challenge.ChallengeName.replace(/[\s.?!,;:]*/g, '') + ' .status').html('Uploading...');
 
-    const employerName = challenge.EmployerName;
-
-    // TODO: get psk from clients list from Airtable
-    // either filter list by EmployerName/Limeade e=
-    // or use promise structure to get the data from airtable then do upload post function
+    // get the domain for the challenge from airtable
     let psk = '';
     for (let i = 0; i < clients.length; i++) {
       if (clients[i].fields['Limeade e='] === employerName) {
         psk = clients[i].fields['Limeade PSK'];
       }
     }
-
-    // // get client and psk
-    // base('Clients').select({
-    //   filterByFormula: `{Limeade e=}='${challenge.EmployerName}'`
-    // }).eachPage((records, fetchNextPage) => {
-    //   const client = records[0];
-    //   psk = client.fields['Limeade PSK'];
-    //   console.log('psk: ', psk);
-    // }, (err) => {
-    //   if (err) {
-    //     console.error(err);
-    //     return;
-    //   }
-    // });
 
     const csv = createCSV(challenge);
     const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
@@ -265,7 +228,6 @@ function App() {
       data: csv.join('\n'),
       type: 'Challenges'
     };
-    console.log('params: ', params);
 
     $.post(url, params).done((response) => {
       // if Limeade punks us with a silent fail
