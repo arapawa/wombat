@@ -14,17 +14,14 @@ function reducer(state, action) {
 
 /* globals $ */
 function App() {
-  // clients csv state
-  const [clientsFromCsv, setClientsFromCsv] = useState(null);
-
   // challenges csv state
   const [challengesFromCsv, setChallengesFromCsv] = useState(null);
-  console.log(challengesFromCsv);
 
   const [clients, dispatch] = React.useReducer(
     reducer,
     [] // initial clients
   );
+  console.log(clients);
 
   // note: why are we using challengesFromCsv and not challenges?
   const [challenges, dispatchChallenges] = React.useReducer(
@@ -48,13 +45,38 @@ function App() {
 
   }, []); // Pass empty array to only run once on mount
 
+  // TODO: create mass-upload function that ensures each challenge is uploaded before the next starts.
+  // Then we can load a .csv, hit mass-upload, sit back and let the app do the rest.
+
   function renderChallenges() {
 
     return challengesFromCsv.map((challenge) => {
       const employerName = challenge.EmployerName;
-      // TODO: get domain from Clients (Most Up to Date)
-      // const domain = challenge.client.fields['Domain'];
-      const domain = 'https://limeadedemorb.mywellmetrics.com';
+
+      // TODO: get domain (and maybe PSK) from clients list from Airtable
+      // either filter list by EmployerName/Limeade e=
+      // or use promise structure to get the data from airtable then create table row
+      let domain = '';
+      for (let i = 0; i < clients.length; i++) {
+        if (clients[i].fields['Limeade e='] === employerName) {
+          domain = clients[i].fields['Domain'];
+        }
+      }
+
+      // // get client and domain
+      // base('Clients').select({
+      //   filterByFormula: `{Limeade e=}='${challenge.EmployerName}'`
+      // }).eachPage((records, fetchNextPage) => {
+      //   const client = records[0];
+      //   domain = client.fields['Domain'];
+      //   psk = client.fields['Limeade PSK'];
+      // }, (err) => {
+      //   if (err) {
+      //     console.error(err);
+      //     return;
+      //   }
+      // });
+
 
       const regexpress = /[\s.?!,;:]*/g;
       return (
@@ -80,7 +102,6 @@ function App() {
       dynamicTyping: true,
       complete: function(results) {
         console.log('Challenges:', results.data);
-        setClientsFromCsv(results.data.EmployerName);
         setChallengesFromCsv(results.data);
       }
     });
@@ -210,9 +231,30 @@ function App() {
     $('#' + challenge.ChallengeName.replace(/[\s.?!,;:]*/g, '') + ' .status').html('Uploading...');
 
     const employerName = challenge.EmployerName;
-    // TODO: get psk from Clients (Most up to Date)
-    // const psk = challenge.client.fields['Limeade PSK'];
-    const psk = 'dbd95a93-07e0-4618-8d6d-182dc7e567ad';
+
+    // TODO: get psk from clients list from Airtable
+    // either filter list by EmployerName/Limeade e=
+    // or use promise structure to get the data from airtable then do upload post function
+    let psk = '';
+    for (let i = 0; i < clients.length; i++) {
+      if (clients[i].fields['Limeade e='] === employerName) {
+        psk = clients[i].fields['Limeade PSK'];
+      }
+    }
+
+    // // get client and psk
+    // base('Clients').select({
+    //   filterByFormula: `{Limeade e=}='${challenge.EmployerName}'`
+    // }).eachPage((records, fetchNextPage) => {
+    //   const client = records[0];
+    //   psk = client.fields['Limeade PSK'];
+    //   console.log('psk: ', psk);
+    // }, (err) => {
+    //   if (err) {
+    //     console.error(err);
+    //     return;
+    //   }
+    // });
 
     const csv = createCSV(challenge);
     const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
@@ -223,6 +265,7 @@ function App() {
       data: csv.join('\n'),
       type: 'Challenges'
     };
+    console.log('params: ', params);
 
     $.post(url, params).done((response) => {
       // if Limeade punks us with a silent fail
@@ -243,67 +286,8 @@ function App() {
       console.log('Upload failed for challenge ' + challenge.ChallengeName);
     });
 
-    // commenting out in case we need it
-    // const employerName = client.fields['Limeade e='];
-
-    // $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Uploading...');
-    // $.ajax({
-    //   url: 'https://api.limeade.com/api/admin/activity',
-    //   type: 'POST',
-    //   dataType: 'json',
-    //   data: JSON.stringify(data),
-    //   headers: {
-    //     Authorization: 'Bearer ' + client.fields['LimeadeAccessToken']
-    //   },
-    //   contentType: 'application/json; charset=utf-8'
-    // }).done((result) => {
-
-    //   // Change row to green on success
-    //   $('#' + employerName.replace(/\s*/g, '')).removeClass('bg-danger');
-    //   $('#' + employerName.replace(/\s*/g, '')).addClass('bg-success text-white');
-    //   $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Success');
-    //   $('#' + employerName.replace(/\s*/g, '') + ' .challenge-id').html(`<a href="${client.fields['Domain']}/admin/program-designer/activities/activity/${result.Data.ChallengeId}" target="_blank">${result.Data.ChallengeId}</a>`);
-
-
-    // }).fail((xhr, request, status, error) => {
-    //   $('#' + employerName.replace(/\s*/g, '')).addClass('bg-danger text-white');
-    //   $('#' + employerName.replace(/\s*/g, '') + ' .status').html('Failed: ' + request.responseText);
-    //   console.error('status: ', request.status);
-    //   console.error('request: ', request.responseText);
-    //   console.log('Create challenge failed for client ' + client.fields['Limeade e=']);
-    // });
-
   }
 
-  // // for single-client-select
-  // function selectClient(e) {
-  //   clients.forEach((client) => {
-  //     if (client.fields['Limeade e='] === e.target.value) {
-  //       setSelectedClient(client);
-  //     }
-  //   });
-  // }
-
-  // // for single-client-select
-  // function renderEmployerNames() {
-  //   const sortedClients = [...clients];
-
-  //   sortedClients.sort((a, b) => {
-  //     const nameA = a.fields['Limeade e='].toLowerCase();
-  //     const nameB = b.fields['Limeade e='].toLowerCase();
-  //     if (nameA < nameB) {
-  //       return -1;
-  //     }
-  //     if (nameA > nameB) {
-  //       return 1;
-  //     }
-  //     return 0;
-  //   });
-
-  //   return sortedClients.map((client) => {
-  //     return <option key={client.id}>{client.fields['Limeade e=']}</option>;
-  //   });
-  // }
 
   return (
     <div id="app">
@@ -312,6 +296,8 @@ function App() {
       <div className="row mb-1">
         <div className="col text-left">
           <h4>Challenge Content</h4>
+          <p><strong>Please note:</strong> Limeade doesn't do well with simultaneous uploads, and may silently fail simultaneous uploads.
+          <br/>For best results, let each challenge successfully upload before uploading the next.</p>
           <div className="form-group">
             <label htmlFor="csvChallengesInput">Import from CSV</label>
             <input type="file" id="csvChallengesInput" className="form-control-file" accept="*.csv" onChange={(e) => handleChallengesCsvFiles(e)} />
