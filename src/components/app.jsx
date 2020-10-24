@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
+import regeneratorRuntime from 'regenerator-runtime'; // used for async and await
 import _ from 'lodash';
 import Airtable from 'airtable';
 const base = new Airtable({ apiKey: 'keyCxnlep0bgotSrX' }).base('appHXXoVD1tn9QATh');
@@ -203,6 +204,7 @@ function App() {
   function uploadChallenge(challenge, challengeIndex) {
     const employerName = challenge.EmployerName;
     const regexpress = /[\s.?!,;:]*/g;
+
     // let the user know that an upload is in progress
     $('#' + challengeIndex + ' .status').html('Uploading...');
 
@@ -245,6 +247,77 @@ function App() {
 
   }
 
+  // uploads all challenges from challengesFromCsv
+  // could use a refactor so it's not a copy-paste of uploadChallenge()
+  function massUpload() {
+    // using rowId rather than challengeIndex so it can be incremented later, and so it's clearly different from challengeIndex
+    let rowId = 0;
+    // upload first challenge in challengesFromCsv
+    massUploadChallenges(rowId);
+
+    function massUploadChallenges(rowId) {
+      const challenge = challengesFromCsv[rowId]; // declaring challenge to upload so this function can match uploadChallenge()
+      const challengeIndex = `challenge-${rowId}`; // creating challengeIndex so we can edit the Status in table and match uploadChallenge()
+      const employerName = challenge.EmployerName;
+      const regexpress = /[\s.?!,;:]*/g;
+
+      // let the user know that an upload is in progress
+      $('#' + challengeIndex + ' .status').html('Uploading...');
+
+      // get the domain for the challenge from airtable
+      let psk = '';
+      for (let i = 0; i < clients.length; i++) {
+        if (clients[i].fields['Limeade e='] === employerName) {
+          psk = clients[i].fields['Limeade PSK'];
+        }
+      }
+
+      const csv = createCSV(challenge);
+      const url = 'https://calendarbuilder.dev.adurolife.com/limeade-upload/';
+
+      const params = {
+        e: employerName,
+        psk: psk,
+        data: csv.join('\n'),
+        type: 'Challenges'
+      };
+
+      $.post(url, params).done((response) => {
+        // if Limeade punks us with a silent fail
+        if (response.includes('error')) {
+          $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
+          $('#' + challengeIndex + ' .status').html('Error. See console log.');
+          console.log('response: ', response);
+          console.log('Upload failed for challenge ' + challenge.ChallengeName);
+        } else {
+          $('#' + challengeIndex + ' .status').addClass('bg-success text-white');
+          $('#' + challengeIndex + ' .status').html('Success');
+        }
+
+        // upload next challenge in csv
+        if (rowId < challengesFromCsv.length-1) {
+          rowId++;
+          massUploadChallenges(rowId);
+        }
+
+      }).fail((request, status, error) => {
+        $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
+        $('#' + challengeIndex + ' .status').html('Error: ' + request.responseText);
+        console.error(request.status);
+        console.error(request.responseText);
+        console.log('Upload failed for challenge ' + challenge.ChallengeName);
+
+        // upload next challenge in csv
+        if (rowId < challengesFromCsv.length-1) {
+          rowId++;
+          massUploadChallenges(rowId);
+        }
+      });
+      
+    }
+
+  }
+
 
   return (
     <div id="app">
@@ -255,9 +328,17 @@ function App() {
           <h4>Challenge Content</h4>
           <p><strong>Please note:</strong> Limeade doesn't do well with simultaneous uploads, and may silently fail simultaneous uploads.
           <br/>For best results, let each challenge successfully upload before uploading the next.</p>
+          <p>Or, try out the Mass Upload button and let your crew upload each challenge for you.</p>
           <div className="form-group">
             <label htmlFor="csvChallengesInput">Import from CSV</label>
-            <input type="file" id="csvChallengesInput" className="form-control-file" accept="*.csv" onChange={(e) => handleChallengesCsvFiles(e)} />
+            <div className="row mb-0">
+              <div className="col-8">
+                <input type="file" id="csvChallengesInput" className="form-control-file" accept="*.csv" onChange={(e) => handleChallengesCsvFiles(e)} />
+              </div>
+              <div className="col-4">
+                <button type="button" id="massUploadButton" className="btn btn-primary col-4" onClick={(e) => massUpload(e)}>Mass Upload</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -33,3 +33,7 @@ body {
 input {
   display: block;
 }
+
+#massUploadButton {
+  float: right;
+}
