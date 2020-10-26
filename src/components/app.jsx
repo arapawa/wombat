@@ -157,7 +157,7 @@ function App() {
       challenge.WinStrategy,
       challenge.Target,
       challenge.Activity,
-      challenge.ChallengeName,
+      '"' + challenge.ChallengeName + '"', // upload as string so commas don't break the upload
       challenge.DisplayPriority,
       challenge.StartDate,
       challenge.EndDate,
