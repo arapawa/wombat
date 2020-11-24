@@ -95,6 +95,7 @@ function App() {
       .replace(/\u201C/g, '"')       // Left double quote
       .replace(/\u201D/g, '"')       // Right double quote
       .replace(/\u2026/g, '...')     // Ellipsis
+      .replace(/,/g, '&comma;')      // Comma
       .replace(/\u2013/g, '&ndash;') // Long dash
       .replace(/\u2014/g, '&mdash;') // Longer dash
       .replace(/\u00A9/g, '&copy;');  // Copyright symbol
@@ -156,7 +157,7 @@ function App() {
       challenge.IsWeekly,
       challenge.WinStrategy,
       challenge.Target,
-      challenge.Activity,
+      '"' + challenge.Activity + '"', // upload as string so commas don't break the upload
       '"' + challenge.ChallengeName + '"', // upload as string so commas don't break the upload
       challenge.DisplayPriority,
       challenge.StartDate,
@@ -228,11 +229,11 @@ function App() {
 
     $.post(url, params).done((response) => {
       // if Limeade punks us with a silent fail
-      if (response.includes('error')) {
+      if (response.includes('error') || response.includes('logMessages')) {
         $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
         $('#' + challengeIndex + ' .status').html('Error. See console log.');
+        console.log('Upload failed for challenge ' + challenge.ChallengeName, csv);
         console.log('response: ', response);
-        console.log('Upload failed for challenge ' + challenge.ChallengeName);
       } else {
         $('#' + challengeIndex + ' .status').addClass('bg-success text-white');
         $('#' + challengeIndex + ' .status').html('Success');
@@ -240,9 +241,9 @@ function App() {
     }).fail((request, status, error) => {
       $('#' + challengeIndex + ' .status').addClass('bg-danger text-white');
       $('#' + challengeIndex + ' .status').html('Error: ' + request.responseText);
+      console.log('Upload failed for challenge ' + challenge.ChallengeName);
       console.error(request.status);
       console.error(request.responseText);
-      console.log('Upload failed for challenge ' + challenge.ChallengeName);
     });
 
   }
