@@ -191,7 +191,7 @@ function App() {
       challenge.ShowExtendedDescription,
       challenge.ActivityTemplateId,
       challenge.IsFeatured,
-      challenge.FeaturedDescription,
+      '"' + challenge.FeaturedDescription + '"',
       challenge.FeaturedImageUrl,
       challenge.DailySelfReportLimit,
       challenge.DefaultPrivacy
