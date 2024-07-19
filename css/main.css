@@ -34,6 +34,24 @@ input {
   display: block;
 }
 
-#massUploadButton {
-  float: right;
+/* table-container {
+  background-color: #1E1F25;
+  border-radius: 20px;
+  height: 244px;
+  padding: 0 10px 10px 10px;
+  overflow: scroll;
+}
+
+Table thead, tr{
+  top: 0px;
+  margin: 0 0 0 0;
+  border: 1px solid black;
+} */
+
+th, td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  max-width: 150px;
 }

@@ -1,14 +1,14 @@
 {
-  "name": "custom-request-loader",
+  "name": "wombat",
   "version": "1.0.0",
-  "description": "Custom Request Loader",
+  "description": "Automotive Inventory Feed file checker",
   "main": "index.js",
-  "repository": "https://github.com/dannytpeck/custom-request-loader",
+  "repository": "https://github.com/arapawa/wombat",
   "scripts": {
     "start": "webpack-dev-server --config ./webpack.config.js --mode development",
     "build": "webpack -p --config ./webpack.config.js --progress --colors"
   },
-  "author": "Danny Peck",
+  "author": "Josh Braun",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.4.3",
@@ -20,7 +20,6 @@
     "webpack-dev-server": "^3.3.1"
   },
   "dependencies": {
-    "airtable": "^0.8.1",
     "limiter": "^1.1.4",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",

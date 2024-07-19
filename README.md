@@ -1,9 +1,9 @@
-# Gone in 60 Seconds
-Transport all the cars (challenges) onto the platform.
+# Wombat
+Automotive Inventory Feed checker.
 
 ### How to Use ###
 
-Load in a Transporter .csv file (e.g., downloaded from Calendar Builder). Once the table loads, click the Upload button for each challenge. Once the upload for one challenge is complete, click to upload the next one.
+Upload an Inventory Feed .csv file and declare which columns correspond to what value (e.g., VIN, year, etc.)
 
 ### Getting Started developing ###
 
@@ -11,8 +11,8 @@ Clone this repo, install dependencies, then start developing with webpack/browse
 
 
 ```
-	> git clone https://github.com/arapawa/gone-in-sixty.git
-	> cd gone-in-sixty
+	> git clone https://github.com/arapawa/wombat.git
+	> cd wombat
 	> npm install
 	> npm start
 ```

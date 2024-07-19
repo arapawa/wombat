@@ -4,8 +4,8 @@ function Header() {
   return (
     <header id="header">
       <img src="images/logo.svg" />
-      <h1 className="title">Gone in 60 Seconds</h1>
-      <h4 className="text-muted">Transport all the cars onto the platform.</h4>
+      <h1 className="title">Wombat</h1>
+      <h4 className="text-muted">Automotive Inventory Feed file checker.</h4>
     </header>
   );
 }
