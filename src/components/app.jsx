@@ -5,6 +5,7 @@ import _ from 'lodash';
 import Papa from 'papaparse'; // using Papaparse library for FileReader and parsing to Json
 
 import Header from './header';
+import Calculations from './calculations';
 import Table from './table';
 import Footer from './footer';
 
@@ -18,36 +19,12 @@ function reducer(state, action) {
 /* globals $ */
 function App() {
   // vehicles csv state
-  const [vehiclesFromCsv, setVehiclesFromCsv] = useState(null);
-
-  // note: why are we using vehiclesFromCsv and not vehicles?
-  const [vehicles, dispatchVehicles] = React.useReducer(
-    reducer,
-    [] // initial vehicles
-  );
+  const [vehicles, setVehicles] = useState(testdata);
 
   // getting the table headings for rendering on the page
   function getHeadings(e) {
     return Object.keys(e[0]);
   }
-
-  // no longer needed due to Table paradigm
-  // but keeping just in case for backup
-  // function renderVehicles() {
-
-  //   return vehiclesFromCsv.map((vehicle, index) => {
-  //     console.log(vehicle.VIN);
-  //     const dealerName = vehicle.DealerName; // note: won't work yet
-
-  //     const regexpress = /[\s.?!,;:]*/g;
-  //     return (
-  //       <tr id={`vehicle-${index}`} key={`vehicle-${index}`}>
-  //         {/* <td className="dealer-name">{dealerName}</td> */}
-  //         <td className="VIN">{vehicle.VIN}</td>
-  //       </tr>
-  //     );
-  //   });
-  // }
 
   function handleVehiclesCsvFiles(e) {
     const file = e.target.files[0];
@@ -56,7 +33,7 @@ function App() {
       dynamicTyping: true,
       complete: function(results) {
         console.log('Vehicles:', results.data);
-        setVehiclesFromCsv(results.data);
+        setVehicles(results.data);
       }
     });
   }
@@ -94,22 +71,30 @@ function App() {
         </div>
       </div>
 
+      {/* Tabs for showing Calculations or Vehicle (tabular) data */}
+      <ul className="nav nav-tabs" id="myTab" role="tablist">
+        <li className="nav-item" role="presentation">
+          <button className="nav-link active" id="calculations-tab" data-bs-toggle="tab" data-bs-target="#calculations" type="button" role="tab" aria-controls="calculations" aria-selected="true">Calculations</button>
+        </li>
+        <li className="nav-item" role="presentation">
+          <button className="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab" aria-controls="vehicles" aria-selected="false">Vehicles</button>
+        </li>
+      </ul>
+
       <div className="row mb-1">
-        {/* Commit to one of the below paradigms and figure it out. */}
-        {/* ISSUE: below Table doesn't work because it's expecting data on pageload */}
-        <div className="table-container table-responsive">
-          <Table theadData={vehiclesFromCsv ? getHeadings(vehiclesFromCsv) : getHeadings(testdata)} tbodyData={vehiclesFromCsv ? vehiclesFromCsv : testdata}/>
+        <div className="tab-content" id="myTabContent">
+          {/* Calculations content */}
+          <div className="tab-pane fade show active" id="calculations" role="tabpanel" aria-labelledby="calculations-tab">
+            <Calculations vehicles={vehicles} />
+          </div>
+          {/* Vehicles (tablular data) content */}
+          <div className="tab-pane fade" id="vehicles" role="tabpanel" aria-labelledby="vehicles-tab">
+            <div className="table-container table-responsive">
+              {/* <Table theadData={vehiclesFromCsv ? getHeadings(vehiclesFromCsv) : getHeadings(testdata)} tbodyData={vehiclesFromCsv ? vehiclesFromCsv : testdata}/> */}
+              <Table theadData={getHeadings(vehicles)} tbodyData={vehicles}/>
+            </div>
+          </div>
         </div>
-        {/* ISSUE: below table doesn't work because the table headings would be hard-coded
-        ... and it's not populating vehicles anyway */}
-        {/* <table className="table table-bordered table-hover table-striped" id="vehicles">
-          <thead>
-            {vehiclesFromCsv ? getHeadings(vehiclesFromCsv) : getHeadings(testdata)}
-          </thead>
-          <tbody>
-            {vehiclesFromCsv ? renderVehicles() : <tr />}
-          </tbody>
-        </table> */}
       </div>
 
       <Footer />
